@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "353993089027",
+    "project_id": "nexora-5b571",
+    "storage_bucket": "nexora-5b571.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:353993089027:android:b557888c09f49d406bee36",
+        "android_client_info": {
+          "package_name": "com.example.sway"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "353993089027-gfl5q2h0pn69cl1r7bf07v5oogm8ovpu.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAwM_X3Qsn8ivWLwWtbyYH7UG6U7Qjmt84"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "353993089027-gfl5q2h0pn69cl1r7bf07v5oogm8ovpu.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "353993089027-mpsg8n6tklv4rh78ogmdv0ce6ai9ru6p.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.sway"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
