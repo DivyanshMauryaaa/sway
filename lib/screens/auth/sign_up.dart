@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -36,6 +37,16 @@ class _SignUpPageState extends State<SignUpPage> {
             email: _emailController.text,
             password: _passwordController.text,
           );
+
+        final tempUserInstance = userCredential.user;
+
+      FirebaseFirestore.instance.collection('users').add({
+        'displayName': _nameController.text,
+        'email': _emailController.text,
+        'profilePic': '',
+        'user_id': tempUserInstance?.uid,
+      });
+
       // On successful sign-up
       Navigator.pop(context);
     } on FirebaseAuthException catch (e) {
@@ -49,7 +60,9 @@ class _SignUpPageState extends State<SignUpPage> {
         );
       }
     } catch (e) {
-      print('Error: $e');
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
     }
   }
 
@@ -89,6 +102,37 @@ class _SignUpPageState extends State<SignUpPage> {
                         ),
                       ),
                       const SizedBox(height: 24),
+
+                      TextFormField(
+                        controller: _nameController,
+                        keyboardType: TextInputType.text,
+                        decoration: InputDecoration(
+                          labelText: 'Name',
+                          hintText: 'Enter your Name',
+                          prefixIcon: Icon(
+                            Icons.person,
+                            color: Colors.blue.shade800,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color: Colors.blue.shade800,
+                              width: 2,
+                            ),
+                          ),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your email';
+                          }
+                          return null;
+                        },
+                      ),
+
+                      const SizedBox(height: 16),
                       TextFormField(
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,

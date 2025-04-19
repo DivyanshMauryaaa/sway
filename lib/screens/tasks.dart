@@ -54,12 +54,12 @@ class _TasksState extends State<Tasks> {
 
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          final _formKey = GlobalKey<FormState>();
-          final TextEditingController _titleController =
+          final formKey = GlobalKey<FormState>();
+          final TextEditingController titleController =
               TextEditingController();
-          final TextEditingController _descriptionController =
+          final TextEditingController descriptionController =
               TextEditingController();
-          String? _selectedPriority;
+          String? selectedPriority;
 
           showModalBottomSheet(
             context: context,
@@ -83,13 +83,13 @@ class _TasksState extends State<Tasks> {
                     SizedBox(height: 10),
 
                     Form(
-                      key: _formKey,
+                      key: formKey,
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           TextFormField(
-                            controller: _titleController,
+                            controller: titleController,
                             decoration: InputDecoration(
                               labelText: 'Task Title',
                               border: OutlineInputBorder(),
@@ -103,7 +103,7 @@ class _TasksState extends State<Tasks> {
                           ),
                           SizedBox(height: 10),
                           TextFormField(
-                            controller: _descriptionController,
+                            controller: descriptionController,
                             decoration: InputDecoration(
                               labelText: 'Task Description (optional)',
                               border: OutlineInputBorder(),
@@ -126,17 +126,17 @@ class _TasksState extends State<Tasks> {
                                     )
                                     .toList(),
                             onChanged: (value) {
-                              _selectedPriority = value;
+                              selectedPriority = value;
                             },
                           ),
                           SizedBox(height: 20),
                           ElevatedButton(
                             onPressed: () {
-                              if (_formKey.currentState!.validate()) {
-                                final taskTitle = _titleController.text;
+                              if (formKey.currentState!.validate()) {
+                                final taskTitle = titleController.text;
                                 final taskDescription =
-                                    _descriptionController.text;
-                                final taskPriority = _selectedPriority;
+                                    descriptionController.text;
+                                final taskPriority = selectedPriority;
 
                                 // Handle the form submission logic here
                                 print('Task Title: $taskTitle');

@@ -6,7 +6,8 @@ import 'screens/schedules.dart';
 import 'screens/tasks.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import './screens/auth/login.dart';
+import 'screens/auth/login.dart';
+import 'screens/auth/user_profile.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -83,7 +84,10 @@ class _MainAppState extends State<MainApp> {
         centerTitle: true,
         backgroundColor: Colors.blue.shade800,
         leading: IconButton(onPressed: () {
-          
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const UserProfile()),
+          );
         }, icon: Icon(Icons.person, color: Colors.white,)),
       ),
       body: _pages[_selectedScreen],
