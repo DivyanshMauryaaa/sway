@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -10,44 +11,108 @@ class UserProfile extends StatefulWidget {
 
 class _UserProfileState extends State<UserProfile> {
   final User? user =
-      FirebaseAuth.instance.currentUser; //Get current logged-in user.
+      FirebaseAuth.instance.currentUser; // Get current logged-in user
+  final db = FirebaseFirestore.instance;
 
-  //User variables declearations
-  late String uid;
-  late String displayName;
-  late String email;
-  late String photoURL;
+  // User variables
+  String uid = '';
+  String displayName = 'Loading...';
+  String email = 'Loading...';
+  String photoURL = '';
 
   @override
   void initState() {
     super.initState();
 
-    //Get user details
+    // Get user details from Firebase Auth
     uid =
         user?.uid ??
         'No user ID:: error please contact support for more details';
-    displayName = user?.displayName ?? 'Please set your name';
     email = user?.email ?? 'Please set your email';
-    photoURL = user?.photoURL ?? 'https://placehold.co/70';
+
+    // Fetch user data from Firestore
+    getUserDataByUserId();
   }
 
-  Future<void> updateUserProfile({String? newName, String? newPhotoUrl}) async {
-    try {
-      User? user = FirebaseAuth.instance.currentUser;
+  Future<void> getUserDataByUserId() async {
+    // Get the current logged-in user's UID from Firebase Auth
+    String uid = user?.uid ?? 'No user UID';
 
-      if (user != null) {
-        await user.updateDisplayName(newName);
-        await user.updatePhotoURL(newPhotoUrl);
-        await user.reload(); // important to refresh the data!
+    if (uid != 'No user UID') {
+      try {
+        // Query Firestore collection for documents where 'user_id' matches the current UID
+        QuerySnapshot userDocs =
+            await FirebaseFirestore.instance
+                .collection('users')
+                .where('user_id', isEqualTo: uid) // Filtering by user_id field
+                .get();
 
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("User Updated Successfuly!")));
+        // Check if any document is found
+        if (userDocs.docs.isNotEmpty) {
+          // Get the first matching document (assuming user_id is unique)
+          var userDoc = userDocs.docs.first;
+
+          // Access the data in the document
+          var userData = userDoc.data() as Map<String, dynamic>;
+
+          // Extract user data
+          String getDisplayName = userData['displayName'] ?? 'No name';
+          String getEmail = userData['email'] ?? 'No email';
+          String getPhotoUrl = userData['profilePic'] ?? '';
+
+          setState(() {
+            displayName = getDisplayName;
+            photoURL = getPhotoUrl;
+          });
+        } else {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text("Sorry, user was not found")));
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("There was an error displaying your details, $e"),
+          ),
+        );
       }
-    } catch (e) {
+    } else {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text("Error: $e")));
+      ).showSnackBar(SnackBar(content: Text("Please log in to get your details.")));
+    }
+  }
+
+  Future<void> updateUserProfile({
+    required String newName,
+    required String newPhotoURL,
+  }) async {
+    try {
+      // Reference to the Firestore collection
+      DocumentReference userDocRef = db.collection('users').doc(uid);
+
+      // Update the document
+      await userDocRef.update({
+        'displayName': newName,
+        'photoURL': newPhotoURL,
+      });
+
+      // Also update Firebase Auth profile
+      await user?.updateDisplayName(newName);
+      await user?.updatePhotoURL(newPhotoURL);
+
+      // Reload user after update to get new values
+      await user?.reload();
+
+      // Set updated data to local variables
+      setState(() {
+        displayName = newName;
+        photoURL = newPhotoURL;
+      });
+
+      print("Profile updated successfully.");
+    } catch (e) {
+      print("Error updating user profile: $e");
     }
   }
 
@@ -55,21 +120,27 @@ class _UserProfileState extends State<UserProfile> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text("Your Profile"), centerTitle: true),
-
       body: SingleChildScrollView(
         padding: EdgeInsets.all(12),
         child: Column(
           children: [
-            Container(
-              width: 100,
-              height: 100,
-              decoration: BoxDecoration(
-                color: Colors.red,
-                borderRadius: BorderRadius.circular(30),
-              ),
-              child: Text(''),
-            ),
+            // Profile picture container
+            CircleAvatar(radius: 50, backgroundImage: NetworkImage(photoURL)),
+            SizedBox(height: 16),
 
+            // Name and Email display
+            Text(
+              "Hi, $displayName",
+              style: TextStyle(color: Colors.grey.shade700, fontSize: 25),
+            ),
+            
+            Text(
+              email,
+              style: TextStyle(color: Colors.grey.shade700, fontSize: 16),
+            ),
+            SizedBox(height: 15),
+
+            // Edit Profile and Log Out buttons
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -119,19 +190,19 @@ class _UserProfileState extends State<UserProfile> {
                               SizedBox(height: 16),
                               ElevatedButton(
                                 onPressed: () {
-                                    String newName =
-                                        nameController.text.isNotEmpty
-                                            ? nameController.text
-                                            : displayName;
-                                    String NewPhotoURL =
-                                        photoURLController.text.isNotEmpty
-                                            ? photoURLController.text
-                                            : photoURL;
+                                  String newName =
+                                      nameController.text.isNotEmpty
+                                          ? nameController.text
+                                          : displayName;
+                                  String newPhotoURL =
+                                      photoURLController.text.isNotEmpty
+                                          ? photoURLController.text
+                                          : photoURL;
 
-                                            updateUserProfile(
-                                              newName: newName,
-                                              newPhotoUrl: NewPhotoURL
-                                            );
+                                  updateUserProfile(
+                                    newName: newName,
+                                    newPhotoURL: newPhotoURL,
+                                  );
                                   Navigator.pop(context);
                                 },
                                 child: Text("Save"),
@@ -145,25 +216,14 @@ class _UserProfileState extends State<UserProfile> {
                   child: Text("Edit Profile"),
                 ),
                 SizedBox(width: 10),
-                TextButton(onPressed: () {
-                  FirebaseAuth.instance.signOut();
-                }, child: Text("Log out")),
+                TextButton(
+                  onPressed: () {
+                    FirebaseAuth.instance.signOut();
+                  },
+                  child: Text("Log out"),
+                ),
               ],
             ),
-
-            Text(
-              displayName,
-              style: TextStyle(color: Colors.grey.shade700, fontSize: 25),
-            ),
-
-            SizedBox(height: 10),
-
-            Text(
-              email,
-              style: TextStyle(color: Colors.grey.shade700, fontSize: 16),
-            ),
-
-            SizedBox(height: 10),
           ],
         ),
       ),

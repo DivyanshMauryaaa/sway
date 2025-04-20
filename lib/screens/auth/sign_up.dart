@@ -16,6 +16,7 @@ class _SignUpPageState extends State<SignUpPage> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   bool _isPasswordObscured = true;
   bool _isConfirmPasswordObscured = true;
   bool _agreeToTerms = false;
@@ -38,9 +39,9 @@ class _SignUpPageState extends State<SignUpPage> {
             password: _passwordController.text,
           );
 
-        final tempUserInstance = userCredential.user;
+      final tempUserInstance = userCredential.user;
 
-      FirebaseFirestore.instance.collection('users').add({
+      await _firestore.collection('users').add({
         'displayName': _nameController.text,
         'email': _emailController.text,
         'profilePic': '',
@@ -133,6 +134,7 @@ class _SignUpPageState extends State<SignUpPage> {
                       ),
 
                       const SizedBox(height: 16),
+
                       TextFormField(
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,

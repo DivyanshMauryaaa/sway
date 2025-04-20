@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import './task_pages/completed_tasks.dart';
 import './task_pages/tasks.dart';
@@ -11,6 +13,11 @@ class Tasks extends StatefulWidget {
 
 class _TasksState extends State<Tasks> {
   @override
+  final _database = FirebaseFirestore.instance;
+  final _auth = FirebaseAuth.instance;
+
+  User? get user => _auth.currentUser;
+
   Widget build(BuildContext context) {
     return Scaffold(
       body: SingleChildScrollView(
@@ -129,9 +136,11 @@ class _TasksState extends State<Tasks> {
                               selectedPriority = value;
                             },
                           ),
+                          
                           SizedBox(height: 20),
+
                           ElevatedButton(
-                            onPressed: () {
+                            onPressed: () async {
                               if (formKey.currentState!.validate()) {
                                 final taskTitle = titleController.text;
                                 final taskDescription =
@@ -139,9 +148,13 @@ class _TasksState extends State<Tasks> {
                                 final taskPriority = selectedPriority;
 
                                 // Handle the form submission logic here
-                                print('Task Title: $taskTitle');
-                                print('Task Description: $taskDescription');
-                                print('Task Priority: $taskPriority');
+                                await _database.collection("Tasks").add(<String, dynamic> {
+                                  'title': taskTitle,
+                                  'description': taskDescription,
+                                  'priority': taskPriority,
+                                  'completed': false,
+                                  'user_id': user?.uid,
+                                });
 
                                 Navigator.pop(context);
                               }
