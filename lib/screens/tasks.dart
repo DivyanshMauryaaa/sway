@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import './task_pages/completed_tasks.dart';
 import './task_pages/tasks.dart';
 
@@ -62,109 +63,145 @@ class _TasksState extends State<Tasks> {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           final formKey = GlobalKey<FormState>();
-          final TextEditingController titleController =
-              TextEditingController();
+          final TextEditingController titleController = TextEditingController();
           final TextEditingController descriptionController =
               TextEditingController();
           String? selectedPriority;
+          final TextEditingController _dateController = TextEditingController();
 
-          showModalBottomSheet(
+          showDialog(
             context: context,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-            ),
             builder: (BuildContext context) {
-              return Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Add New Task',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+              return AlertDialog(
+                scrollable: true,
+                insetPadding: EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 24,
+                ),
+                content: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Add New Task',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                    SizedBox(height: 10),
+                      SizedBox(height: 10),
 
-                    Form(
-                      key: formKey,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          TextFormField(
-                            controller: titleController,
-                            decoration: InputDecoration(
-                              labelText: 'Task Title',
-                              border: OutlineInputBorder(),
+                      Form(
+                        key: formKey,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            TextFormField(
+                              controller: titleController,
+                              decoration: InputDecoration(
+                                labelText: 'Task Title',
+                                border: OutlineInputBorder(),
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Task title is required';
+                                }
+                                return null;
+                              },
                             ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Task title is required';
-                              }
-                              return null;
-                            },
-                          ),
-                          SizedBox(height: 10),
-                          TextFormField(
-                            controller: descriptionController,
-                            decoration: InputDecoration(
-                              labelText: 'Task Description (optional)',
-                              border: OutlineInputBorder(),
+                            SizedBox(height: 10),
+                            TextFormField(
+                              controller: descriptionController,
+                              decoration: InputDecoration(
+                                labelText: 'Task Description (optional)',
+                                border: OutlineInputBorder(),
+                              ),
+                              maxLines: 3,
                             ),
-                            maxLines: 3,
-                          ),
-                          SizedBox(height: 20),
-                          DropdownButtonFormField<String>(
-                            decoration: InputDecoration(
-                              labelText: 'Priority',
-                              border: OutlineInputBorder(),
+                            SizedBox(height: 20),
+                            DropdownButtonFormField<String>(
+                              decoration: InputDecoration(
+                                labelText: 'Priority',
+                                border: OutlineInputBorder(),
+                              ),
+                              items:
+                                  ['High', 'Medium', 'Low']
+                                      .map(
+                                        (priority) => DropdownMenuItem(
+                                          value: priority,
+                                          child: Text(priority),
+                                        ),
+                                      )
+                                      .toList(),
+                              onChanged: (value) {
+                                selectedPriority = value;
+                              },
                             ),
-                            items:
-                                ['High', 'Medium', 'Low']
-                                    .map(
-                                      (priority) => DropdownMenuItem(
-                                        value: priority,
-                                        child: Text(priority),
-                                      ),
-                                    )
-                                    .toList(),
-                            onChanged: (value) {
-                              selectedPriority = value;
-                            },
-                          ),
-                          
-                          SizedBox(height: 20),
+                            SizedBox(height: 20),
 
-                          ElevatedButton(
-                            onPressed: () async {
-                              if (formKey.currentState!.validate()) {
-                                final taskTitle = titleController.text;
-                                final taskDescription =
-                                    descriptionController.text;
-                                final taskPriority = selectedPriority;
+                            TextFormField(
+                              controller: _dateController,
+                              decoration: InputDecoration(
+                                labelText: 'Due Date',
+                                border: OutlineInputBorder(),
+                              ),
+                              enabled: false,
+                              readOnly: true,
+                            ),
 
-                                // Handle the form submission logic here
-                                await _database.collection("Tasks").add(<String, dynamic> {
-                                  'title': taskTitle,
-                                  'description': taskDescription,
-                                  'priority': taskPriority,
-                                  'completed': false,
-                                  'user_id': user?.uid,
-                                });
+                            TextButton(
+                              onPressed: () async {
+                                DateTime? pickedDate = await showDatePicker(
+                                  context: context,
+                                  initialDate: DateTime.now(),
+                                  firstDate: DateTime.now(),
+                                  lastDate: DateTime(2100),
+                                );
 
-                                Navigator.pop(context);
-                              }
-                            },
-                            child: Text('Add Task'),
-                          ),
-                        ],
+                                if (pickedDate != null) {
+                                  // 🎯 Use pickedDate however you want (setState, store in DB, etc.)
+                                  _dateController.text =
+                                      DateFormat('yyyy-MM-dd').format(pickedDate);
+                                }
+                              },
+                              child: Text("Pick Due Date"),
+                            ),
+
+                            SizedBox(height: 20),
+
+                            FilledButton(
+                              onPressed: () async {
+                                if (formKey.currentState!.validate()) {
+                                  final taskTitle = titleController.text;
+                                  final taskDescription =
+                                      descriptionController.text;
+                                  final taskPriority = selectedPriority;
+
+                                  // Handle the form submission logic here
+                                  await _database
+                                      .collection("Tasks")
+                                      .add(<String, dynamic>{
+                                        'title': taskTitle,
+                                        'description': taskDescription,
+                                        'priority': taskPriority,
+                                        'completed': false,
+                                        'user_id': user?.uid,
+                                        'due_date': _dateController.text,
+                                      });
+
+                                  Navigator.pop(context);
+                                }
+                              },
+                              child: Text('Add Task'),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               );
             },

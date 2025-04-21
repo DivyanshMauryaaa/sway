@@ -39,10 +39,10 @@ class LandingPage extends StatelessWidget {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
             body: Center(
-              child: CircularProgressIndicator(), // Nice loader 😄
+              child: CircularProgressIndicator(), // Nice loader
             ),
           );
-        } else if (snapshot.hasData) {
+        } else if (snapshot.hasData) { 
           return const MainApp(); // You’re logged in
         } else {
           return const SignInPage(); // Not logged in

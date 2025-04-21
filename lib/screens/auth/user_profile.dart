@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:sway/screens/auth/login.dart';
 
 class UserProfile extends StatefulWidget {
   const UserProfile({super.key});
@@ -26,10 +27,19 @@ class _UserProfileState extends State<UserProfile> {
   void initState() {
     super.initState();
 
+    // Check if user is logged in
+    if (user == null) {
+      // Redirect to login page if not logged in
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const SignInPage()),
+        );
+      });
+      return;
+    }
+
     // Get user details from Firebase Auth
-    uid =
-        user?.uid ??
-        'No user ID:: error please contact support for more details';
+    uid = user?.uid ?? 'No user ID:: error please contact support for more details';
     email = user?.email ?? 'Please set your email';
 
     // Fetch user data from Firestore
@@ -60,7 +70,7 @@ class _UserProfileState extends State<UserProfile> {
           // Extract user data
           String getDisplayName = userData['displayName'] ?? 'No name';
           String getEmail = userData['email'] ?? 'No email';
-          String getPhotoUrl = userData['profilePic'] ?? '';
+          String getPhotoUrl = userData['profilePic'] ?? 'https://i.ibb.co/0r00000/default-profile-pic.png';
 
           setState(() {
             displayName = getDisplayName;

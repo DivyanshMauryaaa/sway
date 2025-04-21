@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'task.dart';
 
 class TasksPage extends StatefulWidget {
   const TasksPage({super.key});
@@ -32,6 +33,7 @@ class _TasksStatePage extends State<TasksPage> {
                 _database
                     .collection('Tasks')
                     .where('user_id', isEqualTo: user?.uid)
+                    .where('completed', isEqualTo: false)
                     .get(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
@@ -52,6 +54,23 @@ class _TasksStatePage extends State<TasksPage> {
                 itemCount: tasks.length,
                 itemBuilder: (context, index) {
                   return ListTile(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => TaskPage(
+                            taskId: tasks[index]['id'],
+                            taskName: tasks[index]['title'],
+                            taskDescription: tasks[index]['description'],
+                            taskStatus: tasks[index]['status'],
+                            taskPriority: tasks[index]['priority'],
+                            taskDueDate: tasks[index]['due_date'],
+                          ),
+                        )
+                      );
+
+                      setState(() {});
+                    },
                     title: Text(
                       tasks[index]['title'] ?? 'No Title',
                       maxLines: 1,
