@@ -12,7 +12,9 @@ class UserProfile extends StatefulWidget {
 class _UserProfileState extends State<UserProfile> {
   final User? user =
       FirebaseAuth.instance.currentUser; // Get current logged-in user
-  final db = FirebaseFirestore.instance;
+
+  final db = 
+      FirebaseFirestore.instance;
 
   // User variables
   String uid = '';
