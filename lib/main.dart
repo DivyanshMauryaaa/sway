@@ -90,6 +90,7 @@ class _MainAppState extends State<MainApp> {
           );
         }, icon: Icon(Icons.person, color: Colors.white,)),
       ),
+
       body: _pages[_selectedScreen],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedScreen,

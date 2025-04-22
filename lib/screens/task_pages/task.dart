@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart';
 
 class TaskPage extends StatefulWidget {
   final dynamic taskId;
@@ -28,10 +29,12 @@ class _TaskPageState extends State<TaskPage> {
   final _database = FirebaseFirestore.instance;
   final user = FirebaseAuth.instance.currentUser;
   String? userName;
+  late dynamic taskPriority;
 
   @override
   void initState() {
     super.initState();
+    taskPriority = widget.taskPriority.toString();
     _loadUserData();
   }
 
@@ -119,33 +122,51 @@ class _TaskPageState extends State<TaskPage> {
             Text(
               widget.taskName.toString(),
               style: TextStyle(
-                color: Colors.grey.shade700,
-                fontSize: 24,
+                color: Colors.grey.shade900,
+                fontSize: 30,
                 fontWeight: FontWeight.bold,
               ),
               textAlign: TextAlign.center,
             ),
 
-            SizedBox(height: 6),
+            SizedBox(height: 10),
 
-            Text(
-              widget.taskDescription.toString(),
-              style: TextStyle(color: Colors.grey.shade700, fontSize: 16),
-              textAlign: TextAlign.center,
+            Container(
+              padding: EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                widget.taskDescription.toString(),
+                style: TextStyle(fontSize: 16),
+              ),
+            ),
+
+            SizedBox(height: 16),
+
+            Row(
+              children: [
+                Icon(Icons.person, color: Colors.grey.shade700),
+                Text(
+                  '$userName',
+                  style: TextStyle(color: Colors.grey.shade700, fontSize: 16),
+                  textAlign: TextAlign.center,
+                ),
+              ],
             ),
 
             SizedBox(height: 12),
 
-            Text(
-              'Created by: ${user?.email}',
-              style: TextStyle(color: Colors.grey.shade700, fontSize: 16),
-              textAlign: TextAlign.center,
-            ),
-
-            Text(
-              'Due Date: ${widget.taskDueDate}',
-              style: TextStyle(color: Colors.grey.shade700, fontSize: 16),
-              textAlign: TextAlign.center,
+            Row(
+              children: [
+                Icon(Icons.calendar_month, color: Colors.grey.shade700),
+                Text(
+                  widget.taskDueDate.toString(),
+                  style: TextStyle(color: Colors.grey.shade700, fontSize: 16),
+                  textAlign: TextAlign.center,
+                ),
+              ],
             ),
           ],
         ),
@@ -159,6 +180,10 @@ class _TaskPageState extends State<TaskPage> {
     );
     TextEditingController descController = TextEditingController(
       text: widget.taskDescription,
+    );
+
+    TextEditingController dueDateController = TextEditingController(
+      text: widget.taskDueDate,
     );
 
     showDialog(
@@ -178,6 +203,50 @@ class _TaskPageState extends State<TaskPage> {
                   decoration: InputDecoration(labelText: 'Description'),
                   maxLines: 3,
                 ),
+                SizedBox(height: 12),
+                TextField(
+                  controller: dueDateController,
+                  decoration: InputDecoration(labelText: 'Due Date'),
+                  enabled: true,
+                  readOnly: true,
+                ),
+                SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  decoration: InputDecoration(labelText: 'Priority'),
+                  items:
+                      ['Low', 'Medium', 'High']
+                          .map(
+                            (String priority) => DropdownMenuItem<String>(
+                              value: priority,
+                              child: Text(priority),
+                            ),
+                          )
+                          .toList(),
+                  onChanged: (String? value) {
+                    setState(() {
+                      taskPriority = value;
+                    });
+                  },
+                  value: taskPriority,
+                ),
+                SizedBox(height: 12),
+                ElevatedButton(
+                  onPressed: () async {
+                    final pickedDate = await showDatePicker(
+                      context: context,
+                      initialDate: DateTime.now(),
+                      firstDate: DateTime.now(),
+                      lastDate: DateTime.now().add(Duration(days: 365)),
+                    );
+
+                    if (pickedDate != null) {
+                      dueDateController.text = DateFormat(
+                        'yyyy-MM-dd',
+                      ).format(pickedDate);
+                    }
+                  },
+                  child: Text('Pick a new date'),
+                ),
               ],
             ),
             actions: [
@@ -185,15 +254,21 @@ class _TaskPageState extends State<TaskPage> {
                 onPressed: () => Navigator.pop(context),
                 child: Text('Cancel'),
               ),
-              ElevatedButton(
+              FilledButton(
                 onPressed: () async {
-                  await _database
+                  final query = await _database
                       .collection('Tasks')
-                      .doc(widget.taskId)
-                      .update({
-                        'task_name': nameController.text,
-                        'description': descController.text,
-                      });
+                      .where('id', isEqualTo: widget.taskId)
+                      .get();
+
+                  if (query.docs.isNotEmpty) {
+                    await query.docs[0].reference.update({
+                      'title': nameController.text,
+                      'description': descController.text,
+                      'due_date': dueDateController.text,
+                      'priority': taskPriority,
+                    });
+                  }
 
                   setState(() {}); // update UI
                   Navigator.pop(context);

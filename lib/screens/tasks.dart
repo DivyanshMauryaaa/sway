@@ -119,7 +119,8 @@ class _TasksState extends State<Tasks> {
                                 labelText: 'Task Description (optional)',
                                 border: OutlineInputBorder(),
                               ),
-                              maxLines: 3,
+                              minLines: 3,
+                              maxLines: 20,
                             ),
                             SizedBox(height: 20),
                             DropdownButtonFormField<String>(
@@ -190,6 +191,7 @@ class _TasksState extends State<Tasks> {
                                         'completed': false,
                                         'user_id': user?.uid,
                                         'due_date': _dateController.text,
+                                        'task_date': DateFormat('yyyy-MM-dd').format(DateTime.now()).toString(),
                                       });
 
                                   Navigator.pop(context);
