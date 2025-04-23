@@ -13,12 +13,12 @@ class Tasks extends StatefulWidget {
 }
 
 class _TasksState extends State<Tasks> {
-  @override
   final _database = FirebaseFirestore.instance;
   final _auth = FirebaseAuth.instance;
 
   User? get user => _auth.currentUser;
 
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SingleChildScrollView(

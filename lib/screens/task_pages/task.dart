@@ -93,7 +93,7 @@ class _TaskPageState extends State<TaskPage> {
                       final query =
                           await FirebaseFirestore.instance
                               .collection('Tasks')
-                              .where('taskId', isEqualTo: widget.taskId)
+                              .where('id', isEqualTo: widget.taskId)
                               .get();
 
                       if (query.docs.isNotEmpty) {
@@ -119,6 +119,15 @@ class _TaskPageState extends State<TaskPage> {
         padding: EdgeInsets.all(6),
         child: Column(
           children: [
+            Container(
+              padding: EdgeInsets.only(left: 10, right: 10, top: 3, bottom: 3),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.blue.shade800),
+                borderRadius: BorderRadius.circular(7),
+              ),
+              child: Text("Task"),
+            ),
+
             Text(
               widget.taskName.toString(),
               style: TextStyle(
@@ -168,6 +177,19 @@ class _TaskPageState extends State<TaskPage> {
                 ),
               ],
             ),
+
+            SizedBox(height: 12),
+
+            Row(children: [
+              Icon(widget.taskStatus ?? false ? Icons.cancel : Icons.check_circle),
+              Text(
+                widget.taskStatus ?? false ? 'Completed' : 'Not Completed',
+                style: TextStyle(
+                  color: Colors.grey.shade700,
+                  fontSize: 16
+                ),
+              )
+            ],),
           ],
         ),
       ),
@@ -256,10 +278,11 @@ class _TaskPageState extends State<TaskPage> {
               ),
               FilledButton(
                 onPressed: () async {
-                  final query = await _database
-                      .collection('Tasks')
-                      .where('id', isEqualTo: widget.taskId)
-                      .get();
+                  final query =
+                      await _database
+                          .collection('Tasks')
+                          .where('id', isEqualTo: widget.taskId)
+                          .get();
 
                   if (query.docs.isNotEmpty) {
                     await query.docs[0].reference.update({
