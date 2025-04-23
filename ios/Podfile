@@ -7,7 +7,7 @@ target 'Runner' do
   pod 'Firebase/Core'
   pod 'Firebase/Auth'
   pod 'Firebase/Firestore'
-  pod 'cloud_firestore'
+  pod 'Firebase/Firestore'
 
   # Add any other necessary pods here
 end
